@@ -12,7 +12,6 @@ import {
   Heart, 
   MessageSquare, 
   Plus, 
-  Trash2, 
   Send,
   ExternalLink
 } from 'lucide-react';
@@ -20,61 +19,34 @@ import {
 // Read automatically from Vercel Environment Variables
 const DISCORD_WEBHOOK_URL = process.env.NEXT_PUBLIC_DISCORD_WEBHOOK_URL;
 
-// Product Data
+// Original Products Data
 const PRODUCTS = [
   {
-    id: 'ring-1',
-    name: 'Custom Floral Resin Ring',
+    id: 'resin-ring-1',
+    name: 'Handcrafted Resin Ring',
     category: 'Rings',
-    price: 850,
+    price: 700,
     rating: 4.9,
-    description: 'Handcrafted clear resin ring embedded with real dried flowers and subtle gold foil flakes.',
+    description: 'Custom handcrafted clear resin ring with options for delicate floral embeds and metallic flakes.',
     image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'clock-1',
-    name: 'Ocean Wave Resin Wall Clock',
+    id: 'resin-clock-1',
+    name: 'Black Marble & Gold Dust Resin Clock',
     category: 'Clocks',
-    price: 4500,
+    price: 5000,
     rating: 5.0,
-    description: 'Luxury 12-inch resin clock featuring realistic ocean waves, crushed glass, and silent sweep movement.',
+    description: 'Premium statement wall clock designed with rich black marble patterns and shimmering gold dust accents.',
     image: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'shield-1',
-    name: 'Custom Resin Name Shield',
+    id: 'resin-shield-1',
+    name: '6-Inch Resin Shield',
     category: 'Shields',
-    price: 2800,
+    price: 2300,
     rating: 4.8,
-    description: 'Personalized resin crest with customized text, gold border accents, and velvet backing.',
+    description: 'Custom 6-inch resin display shield. Option to add your personal custom photo print (+Rs. 100).',
     image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 'ring-2',
-    name: 'Celestial Gold Resin Band',
-    category: 'Rings',
-    price: 950,
-    rating: 4.7,
-    description: 'Deep navy blue resin band infused with metallic shimmer and gold leaf fragments.',
-    image: 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 'clock-2',
-    name: 'Geode Agate Resin Clock',
-    category: 'Clocks',
-    price: 5200,
-    rating: 4.9,
-    description: 'Statement clock with realistic geode patterns, amethyst hues, and metallic gold quartz veins.',
-    image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 'shield-2',
-    name: 'Preserved Memory Resin Shield',
-    category: 'Shields',
-    price: 3200,
-    rating: 5.0,
-    description: 'Custom shield crafted to preserve event flowers, quotes, or special mementos in crystal resin.',
-    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=600&q=80'
   }
 ];
 
@@ -89,6 +61,7 @@ export default function Home() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [customNotes, setCustomNotes] = useState('');
+  const [includeCustomPhoto, setIncludeCustomPhoto] = useState(false);
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
 
@@ -133,7 +106,9 @@ export default function Home() {
     );
   };
 
-  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const baseTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const photoFee = includeCustomPhoto ? 100 : 0;
+  const cartTotal = baseTotal + photoFee;
 
   // Send Order to Discord Webhook
   const handleCheckout = async (e) => {
@@ -156,7 +131,9 @@ export default function Home() {
             { name: 'Phone Number', value: customerPhone, inline: true },
             { name: 'Delivery Address', value: customerAddress },
             { name: 'Ordered Items', value: itemsList },
+            { name: 'Custom Photo Added?', value: includeCustomPhoto ? 'Yes (+Rs. 100)' : 'No', inline: true },
             { name: 'Total Amount', value: `**Rs. ${cartTotal}**`, inline: true },
+            { name: 'Payment Info', value: 'JazzCash Confirmation Requested', inline: true },
             { name: 'Customization Notes', value: customNotes || 'None' }
           ],
           timestamp: new Date().toISOString()
@@ -172,7 +149,7 @@ export default function Home() {
           body: JSON.stringify(discordPayload)
         });
       } else {
-        console.warn('Discord Webhook URL is missing in process.env');
+        console.warn('Discord Webhook URL is missing');
       }
 
       setOrderSuccess(true);
@@ -184,10 +161,11 @@ export default function Home() {
         setCustomerPhone('');
         setCustomerAddress('');
         setCustomNotes('');
+        setIncludeCustomPhoto(false);
       }, 3000);
     } catch (err) {
       console.error('Failed to send order webhook:', err);
-      alert('Order submission failed. Please try again or contact us directly on Instagram!');
+      alert('Order submission failed. Please contact us directly on Instagram @resin_dreambyrimsha!');
     } finally {
       setIsSubmittingOrder(false);
     }
@@ -204,7 +182,7 @@ export default function Home() {
       embeds: [
         {
           title: '✨ New Store Review Submitted!',
-          color: 0xfbbf24, // Amber/Gold
+          color: 0xfbbf24,
           fields: [
             { name: 'Customer Name', value: reviewName || 'Anonymous', inline: true },
             { name: 'Rating', value: `${stars} (${reviewRating}/5)`, inline: true },
@@ -240,17 +218,11 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-pink-500 selection:text-white">
+    <div className="min-h-screen text-slate-100 font-sans selection:bg-pink-500 selection:text-white">
       {/* Navbar */}
       <nav className="sticky top-0 z-40 backdrop-blur-md bg-slate-950/80 border-b border-pink-500/20 px-4 lg:px-8 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img 
-              src="/logo.png" 
-              alt="Resins by R Logo" 
-              className="w-10 h-10 object-contain rounded-full border border-pink-400/40 shadow-sm"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            />
             <span className="text-xl font-bold bg-gradient-to-r from-pink-400 via-rose-300 to-purple-400 bg-clip-text text-transparent">
               Resins by R
             </span>
@@ -282,16 +254,15 @@ export default function Home() {
 
       {/* Hero Section */}
       <header className="relative py-20 px-4 text-center overflow-hidden border-b border-slate-800">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-pink-900/30 via-slate-950 to-slate-950 -z-10" />
         <div className="max-w-3xl mx-auto space-y-4">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-pink-500/10 border border-pink-500/30 text-pink-300">
-            <Sparkles className="w-3.5 h-3.5" /> Handcrafted Resin Art & Accessories
+            <Sparkles className="w-3.5 h-3.5" /> Handcrafted Resin Art & Custom Gifts
           </span>
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-pink-300 via-rose-100 to-purple-300 bg-clip-text text-transparent">
-            Timeless Keepsakes Molded in Resin
+            Handcrafted Resin Keepsakes
           </h1>
-          <p className="text-slate-400 text-base md:text-lg max-w-xl mx-auto">
-            From custom dried-flower rings to elegant wave wall clocks and personalized shields, every piece is uniquely handcrafted with care.
+          <p className="text-slate-300 text-base md:text-lg max-w-xl mx-auto">
+            Custom resin rings, black marble clocks, and personalized shields tailored with your photos and dried flower embeds.
           </p>
           <div className="pt-2 flex justify-center gap-4">
             <a 
@@ -317,7 +288,7 @@ export default function Home() {
               className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
                 selectedCategory === category
                   ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/25'
-                  : 'bg-slate-900 text-slate-400 border border-slate-800 hover:border-slate-700 hover:text-slate-200'
+                  : 'bg-slate-900/80 text-slate-400 border border-slate-800 hover:border-slate-700 hover:text-slate-200'
               }`}
             >
               {category}
@@ -330,9 +301,9 @@ export default function Home() {
           {filteredProducts.map((product) => (
             <div
               key={product.id}
-              className="group bg-slate-900/60 rounded-2xl border border-slate-800 hover:border-pink-500/40 overflow-hidden transition-all duration-300 flex flex-col"
+              className="group glass-card rounded-2xl overflow-hidden transition-all duration-300 flex flex-col hover:border-pink-500/50"
             >
-              <div className="relative aspect-square overflow-hidden bg-slate-950">
+              <div className="relative aspect-square overflow-hidden bg-slate-950/50">
                 <img
                   src={product.image}
                   alt={product.name}
@@ -354,19 +325,19 @@ export default function Home() {
                       <span>{product.rating}</span>
                     </div>
                   </div>
-                  <p className="text-slate-400 text-sm line-clamp-2 mb-4">
+                  <p className="text-slate-300 text-sm line-clamp-2 mb-4">
                     {product.description}
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                <div className="flex items-center justify-between pt-3 border-t border-white/10">
                   <div>
-                    <span className="text-xs text-slate-500 block">Price</span>
+                    <span className="text-xs text-slate-400 block">Price</span>
                     <span className="text-lg font-bold text-pink-400">Rs. {product.price}</span>
                   </div>
                   <button
                     onClick={() => addToCart(product)}
-                    className="flex items-center gap-1.5 bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 text-pink-300 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                    className="flex items-center gap-1.5 bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/40 text-pink-200 px-4 py-2 rounded-xl text-sm font-medium transition-all"
                   >
                     <Plus className="w-4 h-4" /> Add to Order
                   </button>
@@ -394,15 +365,15 @@ export default function Home() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative w-full max-w-md bg-slate-900 border-l border-slate-800 h-full flex flex-col z-10 p-6 overflow-y-auto"
+              className="relative w-full max-w-md glass-modal h-full flex flex-col z-10 p-6 overflow-y-auto"
             >
-              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center justify-between pb-4 border-b border-white/10">
                 <h2 className="text-xl font-bold flex items-center gap-2 text-slate-100">
-                  <ShoppingBag className="w-5 h-5 text-pink-400" /> Your Order Details
+                  <ShoppingBag className="w-5 h-5 text-pink-400" /> Your Cart
                 </h2>
                 <button
                   onClick={() => setIsCartOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -412,23 +383,23 @@ export default function Home() {
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3">
                   <CheckCircle className="w-16 h-16 text-emerald-400" />
                   <h3 className="text-2xl font-bold text-white">Order Received!</h3>
-                  <p className="text-slate-400 text-sm">
-                    Thank you! We will reach out to confirm payment via JazzCash or WhatsApp shortly.
+                  <p className="text-slate-300 text-sm">
+                    Thank you! Please send JazzCash payment confirmation via WhatsApp to complete your order.
                   </p>
                 </div>
               ) : cart.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-slate-500">
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-slate-400">
                   <ShoppingBag className="w-12 h-12 mb-2 stroke-1" />
                   <p>Your order list is empty.</p>
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col justify-between py-4 space-y-6">
                   {/* Cart Item List */}
-                  <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                  <div className="space-y-3 max-h-52 overflow-y-auto pr-1">
                     {cart.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800"
+                        className="flex items-center justify-between p-3 rounded-xl bg-black/40 border border-white/10"
                       >
                         <div>
                           <h4 className="font-medium text-sm text-slate-200">{item.name}</h4>
@@ -439,7 +410,7 @@ export default function Home() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => updateQuantity(item.id, -1)}
-                            className="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center hover:bg-slate-700"
+                            className="w-7 h-7 rounded-lg bg-white/10 text-slate-300 flex items-center justify-center hover:bg-white/20"
                           >
                             -
                           </button>
@@ -448,7 +419,7 @@ export default function Home() {
                           </span>
                           <button
                             onClick={() => updateQuantity(item.id, 1)}
-                            className="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center hover:bg-slate-700"
+                            className="w-7 h-7 rounded-lg bg-white/10 text-slate-300 flex items-center justify-center hover:bg-white/20"
                           >
                             +
                           </button>
@@ -458,56 +429,69 @@ export default function Home() {
                   </div>
 
                   {/* Customer Information Form */}
-                  <form onSubmit={handleCheckout} className="space-y-3 pt-4 border-t border-slate-800">
+                  <form onSubmit={handleCheckout} className="space-y-3 pt-4 border-t border-white/10">
                     <div>
-                      <label className="text-xs font-medium text-slate-400 block mb-1">Your Full Name</label>
+                      <label className="text-xs font-medium text-slate-300 block mb-1">Full Name</label>
                       <input
                         type="text"
                         required
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="Rimsha..."
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-pink-500"
+                        placeholder="Your Name"
+                        className="w-full glass-input rounded-xl px-3 py-2 text-sm focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-medium text-slate-400 block mb-1">WhatsApp / Phone Number</label>
+                      <label className="text-xs font-medium text-slate-300 block mb-1">JazzCash / WhatsApp Phone Number</label>
                       <input
                         type="tel"
                         required
                         value={customerPhone}
                         onChange={(e) => setCustomerPhone(e.target.value)}
                         placeholder="0300 1234567"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-pink-500"
+                        className="w-full glass-input rounded-xl px-3 py-2 text-sm focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-medium text-slate-400 block mb-1">Delivery Address</label>
+                      <label className="text-xs font-medium text-slate-300 block mb-1">Delivery Address</label>
                       <textarea
                         required
                         rows={2}
                         value={customerAddress}
                         onChange={(e) => setCustomerAddress(e.target.value)}
-                        placeholder="House #, Street, City..."
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-pink-500 resize-none"
+                        placeholder="Street address, city..."
+                        className="w-full glass-input rounded-xl px-3 py-2 text-sm focus:outline-none resize-none"
                       />
                     </div>
 
+                    <div className="flex items-center gap-2 py-1">
+                      <input
+                        type="checkbox"
+                        id="customPhoto"
+                        checked={includeCustomPhoto}
+                        onChange={(e) => setIncludeCustomPhoto(e.target.checked)}
+                        className="rounded border-white/20 bg-black/40 text-pink-500 focus:ring-pink-500"
+                      />
+                      <label htmlFor="customPhoto" className="text-xs text-slate-300 cursor-pointer">
+                        Include Custom Photo Integration (+Rs. 100)
+                      </label>
+                    </div>
+
                     <div>
-                      <label className="text-xs font-medium text-slate-400 block mb-1">Customization Notes (Optional)</label>
+                      <label className="text-xs font-medium text-slate-300 block mb-1">Customization Request (Optional)</label>
                       <input
                         type="text"
                         value={customNotes}
                         onChange={(e) => setCustomNotes(e.target.value)}
-                        placeholder="E.g., Blue dried flowers, gold glitter..."
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-pink-500"
+                        placeholder="Floral embed choices, ring size, etc."
+                        className="w-full glass-input rounded-xl px-3 py-2 text-sm focus:outline-none"
                       />
                     </div>
 
-                    <div className="pt-2 flex justify-between items-center text-slate-300 font-semibold">
-                      <span>Total</span>
+                    <div className="pt-2 flex justify-between items-center text-slate-200 font-semibold">
+                      <span>Total Amount</span>
                       <span className="text-xl text-pink-400">Rs. {cartTotal}</span>
                     </div>
 
@@ -517,10 +501,10 @@ export default function Home() {
                       className="w-full bg-pink-500 hover:bg-pink-600 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       {isSubmittingOrder ? (
-                        <span>Submitting...</span>
+                        <span>Submitting Order...</span>
                       ) : (
                         <>
-                          <Send className="w-4 h-4" /> Place Order
+                          <Send className="w-4 h-4" /> Place Order via JazzCash
                         </>
                       )}
                     </button>
@@ -532,7 +516,7 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Leave a Review Modal */}
+      {/* Review Modal */}
       <AnimatePresence>
         {isReviewModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -548,15 +532,15 @@ export default function Home() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 z-10 shadow-2xl"
+              className="relative w-full max-w-md glass-modal rounded-2xl p-6 z-10 shadow-2xl"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
                 <h3 className="font-bold text-lg text-slate-100 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-amber-400 fill-amber-400" /> Share Your Feedback
+                  <Star className="w-5 h-5 text-amber-400 fill-amber-400" /> Share Your Review
                 </h3>
                 <button
                   onClick={() => setIsReviewModalOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -570,19 +554,19 @@ export default function Home() {
               ) : (
                 <form onSubmit={handleReviewSubmit} className="space-y-4 pt-4">
                   <div>
-                    <label className="text-xs font-medium text-slate-400 block mb-1">Your Name</label>
+                    <label className="text-xs font-medium text-slate-300 block mb-1">Your Name</label>
                     <input
                       type="text"
                       required
                       value={reviewName}
                       onChange={(e) => setReviewName(e.target.value)}
                       placeholder="Your Name"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-pink-500"
+                      className="w-full glass-input rounded-xl px-3 py-2 text-sm focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 block mb-1">Rating</label>
+                    <label className="text-xs font-medium text-slate-300 block mb-1">Rating</label>
                     <div className="flex gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -590,7 +574,7 @@ export default function Home() {
                           key={star}
                           onClick={() => setReviewRating(star)}
                           className={`p-1 transition-colors ${
-                            star <= reviewRating ? 'text-amber-400' : 'text-slate-700'
+                            star <= reviewRating ? 'text-amber-400' : 'text-slate-600'
                           }`}
                         >
                           <Star className="w-6 h-6 fill-current" />
@@ -600,14 +584,14 @@ export default function Home() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-medium text-slate-400 block mb-1">Review</label>
+                    <label className="text-xs font-medium text-slate-300 block mb-1">Review</label>
                     <textarea
                       required
                       rows={3}
                       value={reviewComment}
                       onChange={(e) => setReviewComment(e.target.value)}
                       placeholder="How was your custom resin item?"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-pink-500 resize-none"
+                      className="w-full glass-input rounded-xl px-3 py-2 text-sm focus:outline-none resize-none"
                     />
                   </div>
 
@@ -626,7 +610,7 @@ export default function Home() {
       </AnimatePresence>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 py-8 text-center text-xs text-slate-500">
+      <footer className="border-t border-white/10 py-8 text-center text-xs text-slate-400">
         <p>© {new Date().getFullYear()} Resins by R. All rights reserved.</p>
       </footer>
     </div>
