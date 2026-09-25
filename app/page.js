@@ -1,314 +1,530 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import confetti from 'canvas-confetti';
-import { ShoppingBag, Star, CheckCircle, ShieldCheck, Sparkles, X, Heart, MessageSquare } from 'lucide-react';
+import { 
+  ShoppingBag, 
+  Star, 
+  CheckCircle, 
+  ShieldCheck, 
+  Sparkles, 
+  X, 
+  Heart, 
+  MessageSquare, 
+  Plus, 
+  Trash2, 
+  Send,
+  ExternalLink
+} from 'lucide-react';
 
+// Read automatically from Vercel Environment Variables
+const DISCORD_WEBHOOK_URL = process.env.NEXT_PUBLIC_DISCORD_WEBHOOK_URL;
+
+// Product Data
 const PRODUCTS = [
   {
-    id: 'resin-ring',
-    name: 'Resin Ring',
-    basePrice: 450,
-    allowCustomImage: true,
-    customImagePrice: 100,
-    description: 'Handcrafted floral resin ring with metallic leaf accents and customizable embed.',
-    images: ['https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80']
+    id: 'ring-1',
+    name: 'Custom Floral Resin Ring',
+    category: 'Rings',
+    price: 850,
+    rating: 4.9,
+    description: 'Handcrafted clear resin ring embedded with real dried flowers and subtle gold foil flakes.',
+    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'resin-clock',
-    name: 'Resin Wall Clock',
-    basePrice: 2800,
-    allowCustomImage: false,
-    customImagePrice: 0,
-    description: 'Ocean wave inspired luxury wall clock made with crystal clear epoxy resin.',
-    images: ['https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=600&q=80']
+    id: 'clock-1',
+    name: 'Ocean Wave Resin Wall Clock',
+    category: 'Clocks',
+    price: 4500,
+    rating: 5.0,
+    description: 'Luxury 12-inch resin clock featuring realistic ocean waves, crushed glass, and silent sweep movement.',
+    image: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=600&q=80'
   },
   {
-    id: 'resin-shield',
-    name: 'Resin Shield / Coaster',
-    basePrice: 650,
-    allowCustomImage: true,
-    customImagePrice: 100,
-    description: 'Custom resin shield coaster with custom photo embed option and gold foil rim.',
-    images: ['https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80']
+    id: 'shield-1',
+    name: 'Custom Resin Name Shield',
+    category: 'Shields',
+    price: 2800,
+    rating: 4.8,
+    description: 'Personalized resin crest with customized text, gold border accents, and velvet backing.',
+    image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'ring-2',
+    name: 'Celestial Gold Resin Band',
+    category: 'Rings',
+    price: 950,
+    rating: 4.7,
+    description: 'Deep navy blue resin band infused with metallic shimmer and gold leaf fragments.',
+    image: 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'clock-2',
+    name: 'Geode Agate Resin Clock',
+    category: 'Clocks',
+    price: 5200,
+    rating: 4.9,
+    description: 'Statement clock with realistic geode patterns, amethyst hues, and metallic gold quartz veins.',
+    image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'shield-2',
+    name: 'Preserved Memory Resin Shield',
+    category: 'Shields',
+    price: 3200,
+    rating: 5.0,
+    description: 'Custom shield crafted to preserve event flowers, quotes, or special mementos in crystal resin.',
+    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=600&q=80'
   }
 ];
 
 export default function Home() {
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [hasCustomImage, setHasCustomImage] = useState(false);
-  const [formData, setFormData] = useState({ name: '', phone: '', address: '', tid: '' });
-  const [orderConfirmed, setOrderConfirmed] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [cart, setCart] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  
+  // Checkout Form State
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [customNotes, setCustomNotes] = useState('');
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
 
-  // Review state
-  const [review, setReview] = useState({ name: '', rating: 5, feedback: '' });
-  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  // Review Form State
+  const [reviewName, setReviewName] = useState('');
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
 
-  const calculateTotal = () => {
-    if (!selectedProduct) return 0;
-    return selectedProduct.basePrice + (hasCustomImage ? selectedProduct.customImagePrice : 0);
+  // Filtered Products
+  const categories = ['All', 'Rings', 'Clocks', 'Shields'];
+  const filteredProducts = selectedCategory === 'All' 
+    ? PRODUCTS 
+    : PRODUCTS.filter(p => p.category === selectedCategory);
+
+  // Cart Functions
+  const addToCart = (product) => {
+    setCart((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+    setIsCartOpen(true);
   };
 
-  const handleOrderSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    const orderId = `RBR-${Math.floor(100000 + Math.random() * 900000)}`;
+  const updateQuantity = (id, amount) => {
+    setCart((prev) =>
+      prev
+        .map((item) => {
+          if (item.id === id) {
+            const newQty = item.quantity + amount;
+            return newQty > 0 ? { ...item, quantity: newQty } : null;
+          }
+          return item;
+        })
+        .filter(Boolean)
+    );
+  };
 
-    const payload = {
-      type: 'order',
-      orderId,
-      productName: selectedProduct.name,
-      customerName: formData.name,
-      phone: formData.phone,
-      address: formData.address,
-      hasCustomImage,
-      totalPrice: calculateTotal(),
-      transactionId: formData.tid,
+  const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  // Send Order to Discord Webhook
+  const handleCheckout = async (e) => {
+    e.preventDefault();
+    if (!cart.length) return;
+
+    setIsSubmittingOrder(true);
+
+    const itemsList = cart
+      .map((item) => `• **${item.name}** (x${item.quantity}) - Rs. ${item.price * item.quantity}`)
+      .join('\n');
+
+    const discordPayload = {
+      embeds: [
+        {
+          title: '🛒 New Order Received! - Resins by R',
+          color: 0xf472b6, // Pink
+          fields: [
+            { name: 'Customer Name', value: customerName, inline: true },
+            { name: 'Phone Number', value: customerPhone, inline: true },
+            { name: 'Delivery Address', value: customerAddress },
+            { name: 'Ordered Items', value: itemsList },
+            { name: 'Total Amount', value: `**Rs. ${cartTotal}**`, inline: true },
+            { name: 'Customization Notes', value: customNotes || 'None' }
+          ],
+          timestamp: new Date().toISOString()
+        }
+      ]
     };
 
     try {
-      const res = await fetch('/api/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        setOrderConfirmed({ orderId, total: calculateTotal() });
-        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+      if (DISCORD_WEBHOOK_URL) {
+        await fetch(DISCORD_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(discordPayload)
+        });
       } else {
-        alert('Failed to submit order. Please check your transaction details or try again.');
+        console.warn('Discord Webhook URL is missing in process.env');
       }
+
+      setOrderSuccess(true);
+      setCart([]);
+      setTimeout(() => {
+        setOrderSuccess(false);
+        setIsCartOpen(false);
+        setCustomerName('');
+        setCustomerPhone('');
+        setCustomerAddress('');
+        setCustomNotes('');
+      }, 3000);
     } catch (err) {
-      alert('Network error while placing your order. Please check your connection.');
+      console.error('Failed to send order webhook:', err);
+      alert('Order submission failed. Please try again or contact us directly on Instagram!');
     } finally {
-      setSubmitting(false);
+      setIsSubmittingOrder(false);
     }
   };
 
+  // Send Review to Discord Webhook
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmittingReview(true);
+
+    const stars = '⭐'.repeat(reviewRating);
+
+    const discordPayload = {
+      embeds: [
+        {
+          title: '✨ New Store Review Submitted!',
+          color: 0xfbbf24, // Amber/Gold
+          fields: [
+            { name: 'Customer Name', value: reviewName || 'Anonymous', inline: true },
+            { name: 'Rating', value: `${stars} (${reviewRating}/5)`, inline: true },
+            { name: 'Review', value: reviewComment }
+          ],
+          timestamp: new Date().toISOString()
+        }
+      ]
+    };
+
     try {
-      await fetch('/api/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'review', ...review }),
-      });
-      setReviewSubmitted(true);
+      if (DISCORD_WEBHOOK_URL) {
+        await fetch(DISCORD_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(discordPayload)
+        });
+      }
+
+      setReviewSuccess(true);
+      setTimeout(() => {
+        setReviewSuccess(false);
+        setIsReviewModalOpen(false);
+        setReviewName('');
+        setReviewComment('');
+      }, 2500);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to send review webhook:', err);
+      alert('Review submission failed. Please try again!');
+    } finally {
+      setIsSubmittingReview(false);
     }
   };
 
   return (
-    <main className="max-w-6xl mx-auto px-4 py-12">
-      {/* Brand Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="text-center mb-16"
-      >
-        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-500/20 border border-pink-400/30 text-pink-200 text-xs md:text-sm font-semibold mb-4 tracking-wide uppercase">
-          <Sparkles className="w-4 h-4 text-pink-300" /> Handmade Epoxy Resin Collections
-        </span>
-        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-pink-200 via-rose-300 to-purple-200 bg-clip-text text-transparent mb-4">
-          Resins by R
-        </h1>
-        <p className="text-gray-200 text-base md:text-lg max-w-xl mx-auto font-light">
-          Custom handcrafted resin rings, wall clocks, and shields crafted with precision. Select an item below to place your custom order.
-        </p>
-      </motion.div>
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-pink-500 selection:text-white">
+      {/* Navbar */}
+      <nav className="sticky top-0 z-40 backdrop-blur-md bg-slate-950/80 border-b border-pink-500/20 px-4 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img 
+              src="/logo.png" 
+              alt="Resins by R Logo" 
+              className="w-10 h-10 object-contain rounded-full border border-pink-400/40 shadow-sm"
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+            <span className="text-xl font-bold bg-gradient-to-r from-pink-400 via-rose-300 to-purple-400 bg-clip-text text-transparent">
+              Resins by R
+            </span>
+          </div>
 
-      {/* Catalog Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24">
-        {PRODUCTS.map((product, index) => (
-          <motion.div
-            key={product.id}
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.5, delay: index * 0.12 }}
-            whileHover={{ y: -6 }}
-            className="glass-card rounded-2xl overflow-hidden p-5 flex flex-col justify-between hover:border-pink-400/50 transition-all duration-300"
-          >
-            <div>
-              <div className="h-52 rounded-xl overflow-hidden mb-5 relative group">
-                <img 
-                  src={product.images[0]} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" 
-                />
-                <div className="absolute top-3 right-3 bg-black/40 backdrop-blur-md p-1.5 rounded-full text-pink-300">
-                  <Heart className="w-4 h-4 fill-pink-500/30" />
-                </div>
-              </div>
-              <h2 className="text-2xl font-bold mb-2 text-white">{product.name}</h2>
-              <p className="text-gray-300 text-sm mb-6 leading-relaxed">{product.description}</p>
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-4 pt-3 border-t border-white/10">
-                <div>
-                  <span className="text-xs text-gray-400 block uppercase font-medium">Starting from</span>
-                  <span className="text-2xl font-extrabold text-pink-200">PKR {product.basePrice}</span>
-                </div>
-                {product.allowCustomImage && (
-                  <span className="text-xs bg-pink-500/20 text-pink-200 px-3 py-1 rounded-full border border-pink-400/30 font-medium">
-                    + Photo Customization
-                  </span>
-                )}
-              </div>
-              <button
-                onClick={() => { 
-                  setSelectedProduct(product); 
-                  setHasCustomImage(false); 
-                  setOrderConfirmed(null); 
-                  setFormData({ name: '', phone: '', address: '', tid: '' });
-                }}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-pink-950/50 active:scale-[0.98]"
-              >
-                <ShoppingBag className="w-4 h-4" /> Order Now
-              </button>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Order Modal Popup */}
-      <AnimatePresence>
-        {selectedProduct && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="glass-modal rounded-2xl p-6 md:p-8 max-w-lg w-full relative text-white max-h-[90vh] overflow-y-auto"
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsReviewModalOpen(true)}
+              className="flex items-center gap-2 text-sm text-pink-300 hover:text-pink-200 transition-colors"
             >
-              <button 
-                onClick={() => setSelectedProduct(null)} 
-                className="absolute top-4 right-4 text-gray-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">Leave a Review</span>
+            </button>
 
-              {!orderConfirmed ? (
-                <>
-                  <div className="mb-6">
-                    <h2 className="text-2xl font-bold">Checkout</h2>
-                    <p className="text-pink-300 text-sm font-medium">{selectedProduct.name}</p>
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2.5 rounded-full bg-pink-500/10 border border-pink-500/30 text-pink-300 hover:bg-pink-500/20 transition-all"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {cart.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                  {cart.reduce((a, b) => a + b.quantity, 0)}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <header className="relative py-20 px-4 text-center overflow-hidden border-b border-slate-800">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-pink-900/30 via-slate-950 to-slate-950 -z-10" />
+        <div className="max-w-3xl mx-auto space-y-4">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-pink-500/10 border border-pink-500/30 text-pink-300">
+            <Sparkles className="w-3.5 h-3.5" /> Handcrafted Resin Art & Accessories
+          </span>
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-pink-300 via-rose-100 to-purple-300 bg-clip-text text-transparent">
+            Timeless Keepsakes Molded in Resin
+          </h1>
+          <p className="text-slate-400 text-base md:text-lg max-w-xl mx-auto">
+            From custom dried-flower rings to elegant wave wall clocks and personalized shields, every piece is uniquely handcrafted with care.
+          </p>
+          <div className="pt-2 flex justify-center gap-4">
+            <a 
+              href="https://instagram.com/resin_dreambyrimsha" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="inline-flex items-center gap-2 text-xs text-pink-400 hover:underline"
+            >
+              Follow @resin_dreambyrimsha <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Catalog */}
+      <main className="max-w-7xl mx-auto px-4 py-12">
+        {/* Filter Tabs */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                selectedCategory === category
+                  ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/25'
+                  : 'bg-slate-900 text-slate-400 border border-slate-800 hover:border-slate-700 hover:text-slate-200'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+
+        {/* Product Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              className="group bg-slate-900/60 rounded-2xl border border-slate-800 hover:border-pink-500/40 overflow-hidden transition-all duration-300 flex flex-col"
+            >
+              <div className="relative aspect-square overflow-hidden bg-slate-950">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-full text-xs text-pink-300 font-medium border border-pink-500/20">
+                  {product.category}
+                </div>
+              </div>
+
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-semibold text-lg text-slate-100 group-hover:text-pink-300 transition-colors">
+                      {product.name}
+                    </h3>
+                    <div className="flex items-center gap-1 text-xs text-amber-400">
+                      <Star className="w-3.5 h-3.5 fill-current" />
+                      <span>{product.rating}</span>
+                    </div>
                   </div>
-
-                  <form onSubmit={handleOrderSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-1">Your Full Name</label>
-                      <input 
-                        required 
-                        type="text" 
-                        placeholder="e.g. Ayesha Khan"
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        className="w-full px-4 py-2.5 rounded-xl glass-input outline-none text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-1">WhatsApp / Contact Number</label>
-                      <input 
-                        required 
-                        type="tel" 
-                        placeholder="03XX-XXXXXXX"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="w-full px-4 py-2.5 rounded-xl glass-input outline-none text-sm"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-1">Complete Delivery Address</label>
-                      <textarea 
-                        required 
-                        rows={2}
-                        placeholder="House #, Street, City"
-                        value={formData.address}
-                        onChange={(e) => setFormData({...formData, address: e.target.value})}
-                        className="w-full px-4 py-2.5 rounded-xl glass-input outline-none text-sm"
-                      />
-                    </div>
-
-                    {selectedProduct.allowCustomImage && (
-                      <div className="flex items-center gap-3 p-3.5 rounded-xl bg-pink-500/10 border border-pink-500/20">
-                        <input 
-                          type="checkbox" 
-                          id="customImage" 
-                          checked={hasCustomImage}
-                          onChange={(e) => setHasCustomImage(e.target.checked)}
-                          className="w-4 h-4 accent-pink-500 rounded cursor-pointer"
-                        />
-                        <label htmlFor="customImage" className="text-xs md:text-sm text-gray-200 cursor-pointer select-none">
-                          Add Custom Photo Embed <span className="text-pink-300 font-semibold">(+PKR {selectedProduct.customImagePrice})</span>
-                        </label>
-                      </div>
-                    )}
-
-                    {/* JazzCash Section */}
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-rose-950/60 to-red-950/60 border border-rose-500/30 my-4">
-                      <div className="flex items-center gap-2 mb-2 text-rose-300 font-semibold text-sm">
-                        <ShieldCheck className="w-5 h-5 text-rose-400" /> JazzCash Payment Instructions
-                      </div>
-                      <p className="text-xs text-gray-300 mb-2">
-                        Please transfer <strong className="text-white font-bold">PKR {calculateTotal()}</strong> to:
-                      </p>
-                      <div className="bg-black/50 p-2.5 rounded-lg text-center font-mono text-sm border border-white/10 text-pink-200 mb-3">
-                        Account: 03XX-XXXXXXX (Resins by R)
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-rose-200 mb-1">JazzCash Transaction ID (TID) *</label>
-                        <input 
-                          required 
-                          type="text" 
-                          placeholder="e.g. 0123456789"
-                          value={formData.tid}
-                          onChange={(e) => setFormData({...formData, tid: e.target.value})}
-                          className="w-full px-3 py-2 rounded-lg bg-black/60 border border-rose-400/40 text-rose-100 outline-none text-sm font-mono focus:border-rose-400"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                      <div>
-                        <span className="text-xs text-gray-400 block">Total Price</span>
-                        <span className="text-2xl font-extrabold text-pink-300">PKR {calculateTotal()}</span>
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={submitting}
-                        className="px-6 py-3 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 font-bold transition-all disabled:opacity-50 shadow-lg shadow-pink-900/40"
-                      >
-                        {submitting ? 'Placing Order...' : 'Confirm Order'}
-                      </button>
-                    </div>
-                  </form>
-                </>
-              ) : (
-                <div className="text-center py-6 space-y-4">
-                  <CheckCircle className="w-16 h-16 text-green-400 mx-auto" />
-                  <h3 className="text-2xl font-bold text-white">Order Received!</h3>
-                  <p className="text-gray-200 text-sm leading-relaxed">
-                    Thank you for your order! We have logged your transaction details and will start preparing your resin creation.
+                  <p className="text-slate-400 text-sm line-clamp-2 mb-4">
+                    {product.description}
                   </p>
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/10 font-mono text-sm space-y-1 my-4">
-                    <p className="text-gray-400 text-xs uppercase">Your Order ID:</p>
-                    <p className="text-2xl font-extrabold text-pink-300">{orderConfirmed.orderId}</p>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                  <div>
+                    <span className="text-xs text-slate-500 block">Price</span>
+                    <span className="text-lg font-bold text-pink-400">Rs. {product.price}</span>
                   </div>
                   <button
-                    onClick={() => setSelectedProduct(null)}
-                    className="w-full py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-all"
+                    onClick={() => addToCart(product)}
+                    className="flex items-center gap-1.5 bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 text-pink-300 px-4 py-2 rounded-xl text-sm font-medium transition-all"
                   >
-                    Back to Store Catalog
+                    <Plus className="w-4 h-4" /> Add to Order
                   </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      {/* Cart Drawer */}
+      <AnimatePresence>
+        {isCartOpen && (
+          <div className="fixed inset-0 z-50 flex justify-end">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCartOpen(false)}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            />
+
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="relative w-full max-w-md bg-slate-900 border-l border-slate-800 h-full flex flex-col z-10 p-6 overflow-y-auto"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+                <h2 className="text-xl font-bold flex items-center gap-2 text-slate-100">
+                  <ShoppingBag className="w-5 h-5 text-pink-400" /> Your Order Details
+                </h2>
+                <button
+                  onClick={() => setIsCartOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {orderSuccess ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3">
+                  <CheckCircle className="w-16 h-16 text-emerald-400" />
+                  <h3 className="text-2xl font-bold text-white">Order Received!</h3>
+                  <p className="text-slate-400 text-sm">
+                    Thank you! We will reach out to confirm payment via JazzCash or WhatsApp shortly.
+                  </p>
+                </div>
+              ) : cart.length === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-slate-500">
+                  <ShoppingBag className="w-12 h-12 mb-2 stroke-1" />
+                  <p>Your order list is empty.</p>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col justify-between py-4 space-y-6">
+                  {/* Cart Item List */}
+                  <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                    {cart.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800"
+                      >
+                        <div>
+                          <h4 className="font-medium text-sm text-slate-200">{item.name}</h4>
+                          <span className="text-xs text-pink-400 font-semibold">
+                            Rs. {item.price * item.quantity}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateQuantity(item.id, -1)}
+                            className="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center hover:bg-slate-700"
+                          >
+                            -
+                          </button>
+                          <span className="text-sm font-semibold text-slate-200 w-4 text-center">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item.id, 1)}
+                            className="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center hover:bg-slate-700"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Customer Information Form */}
+                  <form onSubmit={handleCheckout} className="space-y-3 pt-4 border-t border-slate-800">
+                    <div>
+                      <label className="text-xs font-medium text-slate-400 block mb-1">Your Full Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Rimsha..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-pink-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-slate-400 block mb-1">WhatsApp / Phone Number</label>
+                      <input
+                        type="tel"
+                        required
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        placeholder="0300 1234567"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-pink-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-slate-400 block mb-1">Delivery Address</label>
+                      <textarea
+                        required
+                        rows={2}
+                        value={customerAddress}
+                        onChange={(e) => setCustomerAddress(e.target.value)}
+                        placeholder="House #, Street, City..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-pink-500 resize-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-slate-400 block mb-1">Customization Notes (Optional)</label>
+                      <input
+                        type="text"
+                        value={customNotes}
+                        onChange={(e) => setCustomNotes(e.target.value)}
+                        placeholder="E.g., Blue dried flowers, gold glitter..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-pink-500"
+                      />
+                    </div>
+
+                    <div className="pt-2 flex justify-between items-center text-slate-300 font-semibold">
+                      <span>Total</span>
+                      <span className="text-xl text-pink-400">Rs. {cartTotal}</span>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmittingOrder}
+                      className="w-full bg-pink-500 hover:bg-pink-600 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {isSubmittingOrder ? (
+                        <span>Submitting...</span>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" /> Place Order
+                        </>
+                      )}
+                    </button>
+                  </form>
                 </div>
               )}
             </motion.div>
@@ -316,71 +532,103 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Reviews & Feedback Section */}
-      <motion.section 
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        className="glass-card rounded-2xl p-8 max-w-2xl mx-auto"
-      >
-        <div className="text-center mb-6">
-          <span className="inline-flex items-center gap-1.5 text-yellow-300 text-sm font-semibold mb-1">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" /> Reviews & Suggestions
-          </span>
-          <h2 className="text-2xl font-bold text-white">Leave Us Your Feedback</h2>
-        </div>
+      {/* Leave a Review Modal */}
+      <AnimatePresence>
+        {isReviewModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsReviewModalOpen(false)}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            />
 
-        {!reviewSubmitted ? (
-          <form onSubmit={handleReviewSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1">Your Name</label>
-              <input 
-                type="text" 
-                placeholder="Optional"
-                value={review.name}
-                onChange={(e) => setReview({...review, name: e.target.value})}
-                className="w-full px-4 py-2.5 rounded-xl glass-input outline-none text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1">Rating</label>
-              <select 
-                value={review.rating}
-                onChange={(e) => setReview({...review, rating: Number(e.target.value)})}
-                className="w-full px-4 py-2.5 rounded-xl bg-gray-900 border border-white/20 outline-none text-sm text-white"
-              >
-                <option value={5}>⭐⭐⭐⭐⭐ (5/5 Excellent)</option>
-                <option value={4}>⭐⭐⭐⭐ (4/5 Very Good)</option>
-                <option value={3}>⭐⭐⭐ (3/5 Average)</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1">Your Thoughts / Suggestions</label>
-              <textarea 
-                required
-                rows={3}
-                placeholder="Tell us about your experience..."
-                value={review.feedback}
-                onChange={(e) => setReview({...review, feedback: e.target.value})}
-                className="w-full px-4 py-2.5 rounded-xl glass-input outline-none text-sm"
-              />
-            </div>
-            <button 
-              type="submit" 
-              className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 font-bold rounded-xl transition-all text-white shadow-md"
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 z-10 shadow-2xl"
             >
-              Submit Feedback
-            </button>
-          </form>
-        ) : (
-          <div className="text-center text-pink-200 py-6 space-y-2">
-            <MessageSquare className="w-10 h-10 text-pink-400 mx-auto" />
-            <p className="font-semibold text-lg">Thank you!</p>
-            <p className="text-xs text-gray-300">Your review has been successfully sent to our team.</p>
+              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <h3 className="font-bold text-lg text-slate-100 flex items-center gap-2">
+                  <Star className="w-5 h-5 text-amber-400 fill-amber-400" /> Share Your Feedback
+                </h3>
+                <button
+                  onClick={() => setIsReviewModalOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {reviewSuccess ? (
+                <div className="py-8 text-center space-y-2">
+                  <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto" />
+                  <p className="text-lg font-semibold text-slate-100">Thank you for your feedback!</p>
+                </div>
+              ) : (
+                <form onSubmit={handleReviewSubmit} className="space-y-4 pt-4">
+                  <div>
+                    <label className="text-xs font-medium text-slate-400 block mb-1">Your Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={reviewName}
+                      onChange={(e) => setReviewName(e.target.value)}
+                      placeholder="Your Name"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-pink-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-slate-400 block mb-1">Rating</label>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          type="button"
+                          key={star}
+                          onClick={() => setReviewRating(star)}
+                          className={`p-1 transition-colors ${
+                            star <= reviewRating ? 'text-amber-400' : 'text-slate-700'
+                          }`}
+                        >
+                          <Star className="w-6 h-6 fill-current" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-slate-400 block mb-1">Review</label>
+                    <textarea
+                      required
+                      rows={3}
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      placeholder="How was your custom resin item?"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-pink-500 resize-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmittingReview}
+                    className="w-full bg-pink-500 hover:bg-pink-600 text-white font-medium py-2.5 rounded-xl transition-all shadow-lg shadow-pink-500/25 disabled:opacity-50"
+                  >
+                    {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
+                  </button>
+                </form>
+              )}
+            </motion.div>
           </div>
         )}
-      </motion.section>
-    </main>
+      </AnimatePresence>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-800 py-8 text-center text-xs text-slate-500">
+        <p>© {new Date().getFullYear()} Resins by R. All rights reserved.</p>
+      </footer>
+    </div>
   );
 }
