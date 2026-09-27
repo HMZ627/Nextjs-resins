@@ -1,56 +1,164 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, 
   Star, 
   CheckCircle, 
-  ShieldCheck, 
   Sparkles, 
   X, 
-  Heart, 
   MessageSquare, 
   Plus, 
   Send,
+  ChevronLeft,
+  ChevronRight,
   ExternalLink
 } from 'lucide-react';
 
-// Read automatically from Vercel Environment Variables
 const DISCORD_WEBHOOK_URL = process.env.NEXT_PUBLIC_DISCORD_WEBHOOK_URL;
 
-// Original Products Data
+// Original Products with Exact File Names from Python Version
 const PRODUCTS = [
   {
-    id: 'resin-ring-1',
-    name: 'Handcrafted Resin Ring',
+    id: 'resin-ring',
+    name: 'Resin Ring',
     category: 'Rings',
     price: 700,
     rating: 4.9,
     description: 'Custom handcrafted clear resin ring with options for delicate floral embeds and metallic flakes.',
-    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80'
+    images: [
+      '/images/SaveClip.App_753224950_17897573046550553_9171311841910070315_n.jpg.webp',
+      '/images/SaveClip.App_729164572_17897573055550553_1935948774416209706_n.jpg.webp',
+      '/images/SaveClip.App_753604692_17897573067550553_3868263303187958583_n.jpg.webp'
+    ]
   },
   {
-    id: 'resin-clock-1',
+    id: 'resin-clock',
     name: 'Black Marble & Gold Dust Resin Clock',
     category: 'Clocks',
     price: 5000,
     rating: 5.0,
     description: 'Premium statement wall clock designed with rich black marble patterns and shimmering gold dust accents.',
-    image: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=600&q=80'
+    images: [
+      '/images/IMG-20260808-WA0077.jpg',
+      '/images/IMG-20260808-WA0078.jpg'
+    ]
   },
   {
-    id: 'resin-shield-1',
-    name: '6-Inch Resin Shield',
+    id: 'resin-shield',
+    name: 'Resin Shield (6-inches)',
     category: 'Shields',
     price: 2300,
     rating: 4.8,
     description: 'Custom 6-inch resin display shield. Option to add your personal custom photo print (+Rs. 100).',
-    image: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=600&q=80'
+    images: [
+      '/images/shield1.jpg',
+      '/images/shield2.jpg',
+      '/images/shield3.jpg'
+    ]
   }
 ];
+
+// Custom Card Component with Image Carousel
+function ProductCard({ product, onAddToCart }) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const nextImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % product.images.length);
+  };
+
+  const prevImage = (e) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+  };
+
+  return (
+    <div className="group glass-card rounded-2xl overflow-hidden transition-all duration-300 flex flex-col hover:border-pink-500/50">
+      {/* Image Gallery Container */}
+      <div className="relative aspect-square overflow-hidden bg-slate-950/50">
+        <img
+          src={product.images[currentImageIndex]}
+          alt={product.name}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          onError={(e) => {
+            // Fallback placeholder if image path in /public/images is missing
+            e.target.src = 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80';
+          }}
+        />
+
+        {/* Carousel Arrow Controls */}
+        {product.images.length > 1 && (
+          <>
+            <button
+              onClick={prevImage}
+              className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-slate-950/60 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-900"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={nextImage}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-slate-950/60 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-900"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </>
+        )}
+
+        {/* Category Tag */}
+        <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-full text-xs text-pink-300 font-medium border border-pink-500/20">
+          {product.category}
+        </div>
+
+        {/* Carousel Indicators */}
+        {product.images.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {product.images.map((_, idx) => (
+              <span
+                key={idx}
+                className={`h-1.5 rounded-full transition-all ${
+                  idx === currentImageIndex ? 'w-4 bg-pink-400' : 'w-1.5 bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Details */}
+      <div className="p-5 flex-1 flex flex-col justify-between">
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="font-semibold text-lg text-slate-100 group-hover:text-pink-300 transition-colors">
+              {product.name}
+            </h3>
+            <div className="flex items-center gap-1 text-xs text-amber-400">
+              <Star className="w-3.5 h-3.5 fill-current" />
+              <span>{product.rating}</span>
+            </div>
+          </div>
+          <p className="text-slate-300 text-sm line-clamp-2 mb-4">
+            {product.description}
+          </p>
+        </div>
+
+        <div className="flex items-center justify-between pt-3 border-t border-white/10">
+          <div>
+            <span className="text-xs text-slate-400 block">Price</span>
+            <span className="text-lg font-bold text-pink-400">Rs. {product.price}</span>
+          </div>
+          <button
+            onClick={() => onAddToCart(product)}
+            className="flex items-center gap-1.5 bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/40 text-pink-200 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+          >
+            <Plus className="w-4 h-4" /> Add to Order
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -80,7 +188,6 @@ export default function Home() {
     ? PRODUCTS 
     : PRODUCTS.filter(p => p.category === selectedCategory);
 
-  // Cart Functions
   const addToCart = (product) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
@@ -112,7 +219,6 @@ export default function Home() {
   const photoFee = includeCustomPhoto ? 100 : 0;
   const cartTotal = baseTotal + photoFee;
 
-  // Send Order to Discord Webhook
   const handleCheckout = async (e) => {
     e.preventDefault();
     if (!cart.length) return;
@@ -127,7 +233,7 @@ export default function Home() {
       embeds: [
         {
           title: '🛒 New Order Received! - Resins by R',
-          color: 0xf472b6, // Pink
+          color: 0xf472b6,
           fields: [
             { name: 'Customer Name', value: customerName, inline: true },
             { name: 'Phone Number', value: customerPhone, inline: true },
@@ -150,8 +256,6 @@ export default function Home() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(discordPayload)
         });
-      } else {
-        console.warn('Discord Webhook URL is missing');
       }
 
       setOrderSuccess(true);
@@ -173,7 +277,6 @@ export default function Home() {
     }
   };
 
-  // Send Review to Discord Webhook
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     setIsSubmittingReview(true);
@@ -264,7 +367,7 @@ export default function Home() {
             Handcrafted Resin Keepsakes
           </h1>
           <p className="text-slate-300 text-base md:text-lg max-w-xl mx-auto">
-            Custom resin rings, black marble clocks, and personalized shields tailored with your photos and dried flower embeds.
+            Custom resin rings, black marble clocks, and personalized shields tailored with your photos and floral embeds.
           </p>
           <div className="pt-2 flex justify-center gap-4">
             <a 
@@ -281,7 +384,6 @@ export default function Home() {
 
       {/* Main Catalog */}
       <main className="max-w-7xl mx-auto px-4 py-12">
-        {/* Filter Tabs */}
         <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
           {categories.map((category) => (
             <button
@@ -301,51 +403,11 @@ export default function Home() {
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
-            <div
-              key={product.id}
-              className="group glass-card rounded-2xl overflow-hidden transition-all duration-300 flex flex-col hover:border-pink-500/50"
-            >
-              <div className="relative aspect-square overflow-hidden bg-slate-950/50">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-full text-xs text-pink-300 font-medium border border-pink-500/20">
-                  {product.category}
-                </div>
-              </div>
-
-              <div className="p-5 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-semibold text-lg text-slate-100 group-hover:text-pink-300 transition-colors">
-                      {product.name}
-                    </h3>
-                    <div className="flex items-center gap-1 text-xs text-amber-400">
-                      <Star className="w-3.5 h-3.5 fill-current" />
-                      <span>{product.rating}</span>
-                    </div>
-                  </div>
-                  <p className="text-slate-300 text-sm line-clamp-2 mb-4">
-                    {product.description}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between pt-3 border-t border-white/10">
-                  <div>
-                    <span className="text-xs text-slate-400 block">Price</span>
-                    <span className="text-lg font-bold text-pink-400">Rs. {product.price}</span>
-                  </div>
-                  <button
-                    onClick={() => addToCart(product)}
-                    className="flex items-center gap-1.5 bg-pink-500/20 hover:bg-pink-500/30 border border-pink-500/40 text-pink-200 px-4 py-2 rounded-xl text-sm font-medium transition-all"
-                  >
-                    <Plus className="w-4 h-4" /> Add to Order
-                  </button>
-                </div>
-              </div>
-            </div>
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              onAddToCart={addToCart} 
+            />
           ))}
         </div>
       </main>
@@ -396,7 +458,6 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col justify-between py-4 space-y-6">
-                  {/* Cart Item List */}
                   <div className="space-y-3 max-h-52 overflow-y-auto pr-1">
                     {cart.map((item) => (
                       <div
@@ -430,7 +491,6 @@ export default function Home() {
                     ))}
                   </div>
 
-                  {/* Customer Information Form */}
                   <form onSubmit={handleCheckout} className="space-y-3 pt-4 border-t border-white/10">
                     <div>
                       <label className="text-xs font-medium text-slate-300 block mb-1">Full Name</label>
@@ -487,7 +547,7 @@ export default function Home() {
                         type="text"
                         value={customNotes}
                         onChange={(e) => setCustomNotes(e.target.value)}
-                        placeholder="Floral embed choices, ring size, etc."
+                        placeholder="Floral choices, ring size, etc."
                         className="w-full glass-input rounded-xl px-3 py-2 text-sm focus:outline-none"
                       />
                     </div>
@@ -611,7 +671,6 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Footer */}
       <footer className="border-t border-white/10 py-8 text-center text-xs text-slate-400">
         <p>© {new Date().getFullYear()} Resins by R. All rights reserved.</p>
       </footer>
