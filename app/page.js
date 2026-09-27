@@ -56,12 +56,11 @@ export default function Home() {
     setIsSubmitting(true);
     setStatusMsg({ text: 'Sending order notification to Discord...', type: 'info' });
 
-    // Discord Embed Message Payload
     const payload = {
       embeds: [
         {
           title: '🛒 New Order - Resins By R',
-          color: 0xff9ffc, // Pink theme color
+          color: 0xff9ffc,
           fields: [
             { name: 'Product', value: selectedProduct.name, inline: true },
             { name: 'Price', value: selectedProduct.price, inline: true },
@@ -101,9 +100,9 @@ export default function Home() {
   };
 
   return (
-    <main className="relative min-h-screen w-full bg-slate-950 text-white overflow-x-hidden font-sans">
+    <main className="relative min-h-screen w-full text-white overflow-x-hidden font-sans">
       
-      {/* 1. FIXED BACKGROUND ANIMATION */}
+      {/* 1. SOLE FULLSCREEN MOLTEN METAL BACKGROUND */}
       <div className="fixed inset-0 z-0 h-full w-full pointer-events-auto">
         <MoltenMetal
           color1="#5227FF"
@@ -123,7 +122,7 @@ export default function Home() {
           grainIntensity={0.05}
           mouseInteraction
           mouseStrength={0.3}
-          opacity={0.85}
+          opacity={1.0}
         />
       </div>
 
@@ -131,8 +130,8 @@ export default function Home() {
       <div className="relative z-10 w-full min-h-screen flex flex-col items-center">
         
         {/* Navigation Bar */}
-        <header className="w-full max-w-7xl flex items-center justify-between p-6 backdrop-blur-md bg-black/30 border-b border-white/10 sticky top-0 z-50">
-          <h1 className="text-2xl font-black tracking-widest uppercase text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-300">
+        <header className="w-full max-w-7xl flex items-center justify-between p-6 backdrop-blur-md bg-black/40 border-b border-white/10 sticky top-0 z-50">
+          <h1 className="text-2xl font-black tracking-widest uppercase text-white drop-shadow">
             Resins By R
           </h1>
           
@@ -143,7 +142,7 @@ export default function Home() {
               href={INSTAGRAM_URL} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="px-4 py-2 rounded-full bg-pink-600/80 hover:bg-pink-600 transition-all border border-pink-400/30 text-xs tracking-wider font-semibold uppercase"
+              className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-all border border-white/20 text-xs tracking-wider font-semibold uppercase"
             >
               Instagram
             </a>
@@ -152,13 +151,13 @@ export default function Home() {
 
         {/* Hero Section */}
         <section className="flex flex-col items-center justify-center text-center px-4 py-20 max-w-4xl">
-          <span className="text-xs uppercase tracking-widest text-pink-300 font-bold mb-3 px-3 py-1 bg-pink-500/10 rounded-full border border-pink-500/20">
+          <span className="text-xs uppercase tracking-widest text-pink-300 font-bold mb-3 px-3 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/20">
             Handcrafted Luxury Resin Art
           </span>
-          <h2 className="text-5xl sm:text-7xl font-extrabold tracking-tight drop-shadow-lg bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">
+          <h2 className="text-5xl sm:text-7xl font-extrabold tracking-tight drop-shadow-2xl text-white">
             Resin Dream By Rimsha
           </h2>
-          <p className="mt-6 max-w-xl text-lg text-slate-200 leading-relaxed drop-shadow">
+          <p className="mt-6 max-w-xl text-lg text-slate-100 leading-relaxed drop-shadow-md">
             Explore our custom hand-poured resin collection including custom rings, wall clocks, and display shields.
           </p>
           <div className="mt-8 flex flex-wrap gap-4 justify-center">
@@ -170,7 +169,7 @@ export default function Home() {
             </a>
             <a 
               href="#order" 
-              className="px-8 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 rounded-full font-medium transition-all shadow-lg"
+              className="px-8 py-3 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/30 rounded-full font-medium transition-all shadow-lg text-white"
             >
               Place Order via JazzCash
             </a>
@@ -180,18 +179,18 @@ export default function Home() {
         {/* Product Showcase Section */}
         <section id="products" className="w-full max-w-6xl px-6 py-12">
           <div className="text-center mb-12">
-            <h3 className="text-3xl sm:text-4xl font-extrabold">Featured Products</h3>
-            <p className="text-slate-400 mt-2 text-sm">Select an item below to send an instant order notification to Discord</p>
+            <h3 className="text-3xl sm:text-4xl font-extrabold text-white drop-shadow">Featured Products</h3>
+            <p className="text-slate-200 mt-2 text-sm drop-shadow">Select an item below to send an instant order notification to Discord</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {products.map((product) => (
               <div 
                 key={product.id}
-                className="group relative rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 p-5 hover:border-pink-500/50 transition-all duration-300 flex flex-col justify-between hover:shadow-2xl hover:shadow-pink-500/10"
+                className="group relative rounded-3xl bg-black/40 backdrop-blur-xl border border-white/15 p-5 hover:border-pink-400/60 transition-all duration-300 flex flex-col justify-between hover:shadow-2xl"
               >
                 <div>
-                  <div className="h-64 w-full rounded-2xl overflow-hidden bg-slate-900/50 relative mb-5 border border-white/5">
+                  <div className="h-64 w-full rounded-2xl overflow-hidden bg-black/30 relative mb-5 border border-white/10">
                     <img 
                       src={product.image} 
                       alt={product.name}
@@ -206,14 +205,14 @@ export default function Home() {
                     </span>
                   </div>
 
-                  <h4 className="text-2xl font-bold">{product.name}</h4>
-                  <p className="text-slate-300 text-sm mt-2 leading-relaxed">{product.description}</p>
+                  <h4 className="text-2xl font-bold text-white">{product.name}</h4>
+                  <p className="text-slate-200 text-sm mt-2 leading-relaxed">{product.description}</p>
                 </div>
 
                 <a
                   href="#order"
                   onClick={() => setSelectedProduct(product)}
-                  className="mt-6 w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl font-semibold text-xs tracking-wider uppercase text-center transition-all shadow-md block"
+                  className="mt-6 w-full py-3 bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-md rounded-xl font-semibold text-xs tracking-wider uppercase text-center transition-all shadow-md block text-white"
                 >
                   Select & Order
                 </a>
@@ -222,27 +221,27 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Discord Webhook Order Form & JazzCash Instructions */}
+        {/* Order Form & JazzCash Section */}
         <section id="order" className="w-full max-w-3xl px-6 py-12 my-8">
-          <div className="rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 p-8 sm:p-10">
+          <div className="rounded-3xl bg-black/50 backdrop-blur-2xl border border-white/15 p-8 sm:p-10">
             <span className="text-xs font-bold tracking-widest uppercase text-pink-300 block text-center">
               Direct Order Form
             </span>
-            <h3 className="text-3xl font-bold text-center mt-2">JazzCash & Custom Orders</h3>
-            <p className="text-slate-300 text-xs text-center mt-2">
+            <h3 className="text-3xl font-bold text-center mt-2 text-white">JazzCash & Custom Orders</h3>
+            <p className="text-slate-200 text-xs text-center mt-2">
               Submitting this form automatically alerts our team on Discord.
             </p>
 
             <form onSubmit={handleOrderSubmit} className="mt-8 space-y-5">
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-300 mb-2">Selected Product</label>
+                <label className="block text-xs font-semibold uppercase text-slate-200 mb-2">Selected Product</label>
                 <select
                   value={selectedProduct.id}
                   onChange={(e) => {
                     const prod = products.find(p => p.id === e.target.value);
                     if (prod) setSelectedProduct(prod);
                   }}
-                  className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-500"
+                  className="w-full bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-400 text-white"
                 >
                   {products.map(p => (
                     <option key={p.id} value={p.id} className="bg-slate-900 text-white">
@@ -254,56 +253,56 @@ export default function Home() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-300 mb-2">Your Name</label>
+                  <label className="block text-xs font-semibold uppercase text-slate-200 mb-2">Your Name</label>
                   <input
                     type="text"
                     required
                     placeholder="Enter your name"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-500"
+                    className="w-full bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-400 text-white placeholder-slate-400"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-300 mb-2">Phone / Contact</label>
+                  <label className="block text-xs font-semibold uppercase text-slate-200 mb-2">Phone / Contact</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. 03001234567"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-500"
+                    className="w-full bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-400 text-white placeholder-slate-400"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-300 mb-2">JazzCash Transaction ID / Reference</label>
+                <label className="block text-xs font-semibold uppercase text-slate-200 mb-2">JazzCash Transaction ID / Reference</label>
                 <input
                   type="text"
                   placeholder="e.g. 1234567890"
                   value={transactionId}
                   onChange={(e) => setTransactionId(e.target.value)}
-                  className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-500"
+                  className="w-full bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-400 text-white placeholder-slate-400"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-300 mb-2">Custom Color / Design Notes</label>
+                <label className="block text-xs font-semibold uppercase text-slate-200 mb-2">Custom Color / Design Notes</label>
                 <textarea
                   rows="3"
                   placeholder="Specify custom colors, flakes, size, or special requirements..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full bg-black/40 border border-white/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-500"
+                  className="w-full bg-black/50 border border-white/20 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-pink-400 text-white placeholder-slate-400"
                 ></textarea>
               </div>
 
               {statusMsg.text && (
                 <div className={`p-4 rounded-xl text-xs font-semibold text-center ${
-                  statusMsg.type === 'success' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
-                  statusMsg.type === 'error' ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
-                  'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                  statusMsg.type === 'success' ? 'bg-green-500/30 text-green-200 border border-green-500/40' :
+                  statusMsg.type === 'error' ? 'bg-red-500/30 text-red-200 border border-red-500/40' :
+                  'bg-blue-500/30 text-blue-200 border border-blue-500/40'
                 }`}>
                   {statusMsg.text}
                 </div>
@@ -312,7 +311,7 @@ export default function Home() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl font-bold text-sm tracking-wider uppercase transition-all shadow-lg disabled:opacity-50"
+                className="w-full py-4 bg-white/20 hover:bg-white/30 border border-white/30 rounded-xl font-bold text-sm tracking-wider uppercase transition-all shadow-lg text-white disabled:opacity-50 backdrop-blur-md"
               >
                 {isSubmitting ? 'Sending to Discord...' : 'Submit Order Notification'}
               </button>
@@ -321,7 +320,7 @@ export default function Home() {
         </section>
 
         {/* Footer */}
-        <footer className="w-full border-t border-white/10 py-8 text-center text-xs text-slate-400 backdrop-blur-md bg-black/40">
+        <footer className="w-full border-t border-white/10 py-8 text-center text-xs text-slate-300 backdrop-blur-md bg-black/50">
           <p>© {new Date().getFullYear()} Resins By R (resin_dreambyrimsha). All rights reserved.</p>
         </footer>
 
