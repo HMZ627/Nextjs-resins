@@ -131,7 +131,9 @@ export default function Home() {
         
         {/* Navigation Bar */}
         <header className="w-full max-w-7xl flex items-center justify-between p-6 backdrop-blur-md bg-black/40 border-b border-white/10 sticky top-0 z-50">
-          <h1 className="text-2xl font-black tracking-widest uppercase text-white drop-shadow">
+          
+          {/* FADE IN UPWARDS ANIMATION ON PAGE LOAD */}
+          <h1 className="text-2xl font-black tracking-widest uppercase text-white drop-shadow opacity-0 animate-[fadeInUp_0.9s_ease-out_forwards]">
             Resins By R
           </h1>
           
@@ -325,6 +327,21 @@ export default function Home() {
         </footer>
 
       </div>
+
+      {/* Inline Keyframes for Fade In Upwards Animation */}
+      <style jsx global>{`
+        @keyframes fadeInUp {
+          0% {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+
     </main>
   );
 }
