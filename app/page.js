@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import MoltenMetal from '../components/MoltenMetal';
+import MoltenMetal from '@/components/MoltenMetal';
 
 export default function Home() {
   const INSTAGRAM_URL = "https://instagram.com/resin_dreambyrimsha";
